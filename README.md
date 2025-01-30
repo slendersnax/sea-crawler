@@ -1,6 +1,6 @@
 # sea-crawler
 
-C++ build system that uses the GNU compiler (g++).
+C++ build system that uses Python and the GNU compiler (g++).
 
 ### how to use
 
