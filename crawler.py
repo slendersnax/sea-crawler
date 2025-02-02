@@ -22,13 +22,19 @@ def get_arguments() -> None:
                         help="the objective of the current command - 'run' runs the executable (if it has been built), 'build' builds the executable, 'clean' deletes all the built object files",
                         required=True)
 
+    parser.add_argument("-e", "--executable",
+                        metavar="EXECUTABLE",
+                        help="the name of the generated executable file",
+                        type=str,
+                        required=False)
+
     return parser
 
 def main():
     parser = get_arguments()
     args = parser.parse_args()
 
-    crawler_handler = Slender_Crawler(args.path)
+    crawler_handler = Slender_Crawler(args.path, args.executable)
 
     if args.target == "run":
         crawler_handler.run_project()
