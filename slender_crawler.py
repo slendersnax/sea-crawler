@@ -4,16 +4,14 @@ import subprocess
 import datetime
 import pathlib
 
-'''
-MVP Project.
+def get_last_updated(path: str):
+    '''
+    Returns a datetime object which shows the last time the file was modified
+    '''
+    fname = pathlib.Path(path)
+    mtime = datetime.datetime.fromtimestamp(fname.stat().st_mtime, tz=datetime.timezone.utc)
 
-Works on Linux.
-
-Assumes that:
-- all C++ files end in .cpp or .h
-- if the filename is the same for a .cpp and .h file, then it's the same object and the .h file is included in the .cpp file
-- rebuilds all files everytime the 'build' target is run
-'''
+    return mtime
 
 def get_filename_details(path: str):
     '''
@@ -27,8 +25,10 @@ def get_filename_details(path: str):
 class CPP_File:
     def __init__(self, path: str):
         self.path: str = path
+        self.object_path: str = ""
         self.included_files: List[str] = []
         # https://stackoverflow.com/a/52858040 -> see for time for update
+
         self.last_updated = None
 
     def add_included_files(self, filename: str) -> None:
@@ -47,7 +47,7 @@ class Slender_Crawler:
         self.project_path: str = path
         self.executable_name: str = exe
 
-    def find_files(self) -> None:
+    def crawl(self) -> None:
         file_types: List[str] = ["*.cpp", "*.h"]
         files: List[str] = []
 
@@ -55,15 +55,16 @@ class Slender_Crawler:
             files.extend(glob.glob(self.project_path + "/**/{}".format(extension), recursive=True))
 
         # getting all the cpp files and what headers can be found in them
-
         for filepath in files:
             print("Found {}".format(filepath))
-            filename: str = get_filename_details(filepath)[0]
+            filename, file_extension = get_filename_details(filepath)
 
-            # replace with cpp file location sometime
             if filename not in self.cpp_files:
                 print("Adding file to list of project files...")
                 self.cpp_files[filename] = CPP_File(filepath)
+            # so that we keep the location of the .cpp file, not the header file
+            elif file_extension == "cpp":
+                self.cpp_files[filename].path = filepath
             else:
                 print("File already in list of project files.")
 
@@ -109,11 +110,11 @@ class Slender_Crawler:
         print("Final order:\n")
         for key in self.build_order:
             print(key)
+            print("Last time of modification: {}".format(get_last_updated(self.cpp_files.get(key).path)))
             print(self.cpp_files.get(key), "\n")
 
-    def build_project(self) -> None:
-        self.find_files()
-
+    # compiling and linking all source files
+    def build_project_all(self) -> None:
         command: List[str] = ["g++"]
 
         for filename in self.build_order:
@@ -123,6 +124,10 @@ class Slender_Crawler:
             command.append("-o{}".format(self.executable_name))
 
         subprocess.run(command)
+
+    # compiling each individual object file and linking them in the executable
+    def build_project_individual(self) -> None:
+        pass
 
     def run_project(self):
         subprocess.run("./{}".format(self.executable_name), shell=True)

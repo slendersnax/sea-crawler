@@ -17,7 +17,7 @@ def get_arguments() -> None:
                         required=True)
 
     parser.add_argument("-t", "--target",
-                        choices=["run", "build", "clean"],
+                        choices=["run", "build-all", "build-ind", "crawl", "clean"],
                         metavar="TARGET",
                         help="the objective of the current command - 'run' runs the executable (if it has been built), 'build' builds the executable, 'clean' deletes all the built object files",
                         required=True)
@@ -38,8 +38,12 @@ def main():
 
     if args.target == "run":
         crawler_handler.run_project()
-    elif args.target == "build":
-        crawler_handler.build_project()
+    elif args.target == "build-all":
+        crawler_handler.crawl()
+        crawler_handler.build_project_all()
+    elif args.target == "build-ind":
+        crawler_handler.crawl()
+        crawler_handler.build_project_individual()
     elif args.target == "clean":
         crawler_handler.delete_object_files()
 
